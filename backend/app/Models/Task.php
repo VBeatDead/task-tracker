@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Task extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'project_id',
+        'category_id',
+        'created_by',
+        'deleted_by',
+        'title',
+        'description',
+        'due_date',
+        'deleted_at',
+    ];
+
+    protected $casts = [
+        'due_date' => 'date',
+        'deleted_at' => 'datetime',
+    ];
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+}
