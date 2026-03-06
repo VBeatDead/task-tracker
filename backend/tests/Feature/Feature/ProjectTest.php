@@ -72,4 +72,41 @@ class ProjectTest extends TestCase
             ->assertStatus(200)
             ->assertJsonStructure(['data' => ['id', 'name', 'tasks']]);
     }
+
+    public function test_can_search_projects_by_name(): void
+    {
+        Project::factory()->create(['created_by' => $this->user->id, 'name' => 'Alpha Project']);
+        Project::factory()->create(['created_by' => $this->user->id, 'name' => 'Beta Project']);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/projects?search=Alpha')
+            ->assertStatus(200);
+
+        $names = array_column($response->json('data'), 'name');
+        $this->assertContains('Alpha Project', $names);
+        $this->assertNotContains('Beta Project', $names);
+    }
+
+    public function test_can_filter_projects_by_status(): void
+    {
+        Project::factory()->create(['created_by' => $this->user->id, 'status' => 'active']);
+        Project::factory()->create(['created_by' => $this->user->id, 'status' => 'archived']);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/projects?status=archived')
+            ->assertStatus(200);
+
+        foreach ($response->json('data') as $project) {
+            $this->assertEquals('archived', $project['status']);
+        }
+    }
+
+    public function test_project_has_no_delete_endpoint(): void
+    {
+        $project = Project::factory()->create(['created_by' => $this->user->id]);
+
+        $this->actingAs($this->user)
+            ->deleteJson("/api/projects/{$project->id}")
+            ->assertStatus(405);
+    }
 }

@@ -134,4 +134,110 @@ class TaskTest extends TestCase
             ])
             ->assertStatus(200);
     }
+
+    public function test_can_update_task_title_and_description(): void
+    {
+        $task = Task::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'created_by'  => $this->user->id,
+        ]);
+
+        $this->actingAs($this->user)
+            ->putJson("/api/tasks/{$task->id}", [
+                'title'       => 'Judul Baru',
+                'description' => 'Deskripsi baru.',
+                'due_date'    => now()->addDays(5)->format('Y-m-d'),
+                'category_id' => $this->category->id,
+                'project_id'  => $this->project->id,
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('data.title', 'Judul Baru');
+    }
+
+    public function test_cannot_update_task_without_required_fields(): void
+    {
+        $task = Task::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'created_by'  => $this->user->id,
+        ]);
+
+        $this->actingAs($this->user)
+            ->putJson("/api/tasks/{$task->id}", [])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['title', 'description', 'due_date', 'category_id', 'project_id']);
+    }
+
+    public function test_can_filter_tasks_by_category(): void
+    {
+        $otherCategory = Category::factory()->create(['name' => 'Done']);
+
+        Task::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'created_by'  => $this->user->id,
+        ]);
+        Task::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $otherCategory->id,
+            'created_by'  => $this->user->id,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/tasks?category_id={$this->category->id}")
+            ->assertStatus(200);
+
+        foreach ($response->json('data') as $task) {
+            $this->assertEquals($this->category->id, $task['category_id']);
+        }
+    }
+
+    public function test_can_filter_tasks_by_project(): void
+    {
+        $otherProject = Project::factory()->create(['created_by' => $this->user->id]);
+
+        Task::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'created_by'  => $this->user->id,
+        ]);
+        Task::factory()->create([
+            'project_id'  => $otherProject->id,
+            'category_id' => $this->category->id,
+            'created_by'  => $this->user->id,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/tasks?project_id={$this->project->id}")
+            ->assertStatus(200);
+
+        foreach ($response->json('data') as $task) {
+            $this->assertEquals($this->project->id, $task['project_id']);
+        }
+    }
+
+    public function test_can_search_tasks_by_title(): void
+    {
+        Task::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'created_by'  => $this->user->id,
+            'title'       => 'Implementasi Login',
+        ]);
+        Task::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'created_by'  => $this->user->id,
+            'title'       => 'Setup Database',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/tasks?search=Login')
+            ->assertStatus(200);
+
+        $titles = array_column($response->json('data'), 'title');
+        $this->assertContains('Implementasi Login', $titles);
+        $this->assertNotContains('Setup Database', $titles);
+    }
 }

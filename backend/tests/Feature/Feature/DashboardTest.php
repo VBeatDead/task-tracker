@@ -73,4 +73,61 @@ class DashboardTest extends TestCase
         $this->assertCount(1, $upcomingTasks);
         $this->assertEquals($todoCat->id, $upcomingTasks[0]['category_id']);
     }
+
+    public function test_dashboard_upcoming_excludes_soft_deleted_tasks(): void
+    {
+        $user    = User::factory()->create();
+        $project = Project::factory()->create(['created_by' => $user->id]);
+        $cat     = Category::factory()->create(['name' => 'Todo']);
+
+        Task::factory()->create([
+            'project_id'  => $project->id,
+            'category_id' => $cat->id,
+            'created_by'  => $user->id,
+            'due_date'    => now()->addDays(3)->format('Y-m-d'),
+            'deleted_at'  => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertStatus(200);
+
+        $this->assertCount(0, $response->json('data.upcoming_tasks'));
+    }
+
+    public function test_dashboard_incomplete_tasks_excludes_done_and_deleted(): void
+    {
+        $user    = User::factory()->create();
+        $project = Project::factory()->create(['created_by' => $user->id]);
+        $todoCat = Category::factory()->create(['name' => 'Todo']);
+        $doneCat = Category::factory()->create(['name' => 'Done']);
+
+        // Harus dihitung
+        Task::factory()->create([
+            'project_id'  => $project->id,
+            'category_id' => $todoCat->id,
+            'created_by'  => $user->id,
+        ]);
+
+        // Done — tidak dihitung
+        Task::factory()->create([
+            'project_id'  => $project->id,
+            'category_id' => $doneCat->id,
+            'created_by'  => $user->id,
+        ]);
+
+        // Soft deleted — tidak dihitung
+        Task::factory()->create([
+            'project_id'  => $project->id,
+            'category_id' => $todoCat->id,
+            'created_by'  => $user->id,
+            'deleted_at'  => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertStatus(200);
+
+        $this->assertEquals(1, $response->json('data.total_incomplete_tasks'));
+    }
 }
