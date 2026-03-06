@@ -2,6 +2,8 @@
 
 Aplikasi manajemen proyek dan task berbasis web — Technical Test Junior Fullstack Web Developer Energeek 2026.
 
+**Live Preview:** https://vbeatdead.github.io/task-tracker/
+
 ## Tech Stack
 
 | Layer | Teknologi |

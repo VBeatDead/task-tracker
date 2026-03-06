@@ -39,6 +39,8 @@ async function loadProject(): Promise<void> {
     const res = await getProject(projectId)
     project.value = res.data
     distributeToGroups(res.data.tasks ?? [])
+  } catch {
+    toast.error('Gagal memuat project. Coba refresh halaman.')
   } finally {
     loading.value = false
   }

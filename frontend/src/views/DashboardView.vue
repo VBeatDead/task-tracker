@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import AppLayout from '@/components/AppLayout.vue'
 import DueDateIndicator from '@/components/DueDateIndicator.vue'
 import { getDashboard } from '@/services/dashboard.service'
+import { toast } from '@/plugins/toast.helper'
 import type { DashboardData } from '@/types/dashboard.types'
 
 const loading = ref(true)
@@ -12,6 +13,8 @@ onMounted(async () => {
   try {
     const res = await getDashboard()
     dashboardData.value = res.data
+  } catch {
+    toast.error('Gagal memuat dashboard. Coba refresh halaman.')
   } finally {
     loading.value = false
   }

@@ -35,6 +35,8 @@ async function fetchTasks(): Promise<void> {
     if (projectFilter.value) params.project_id = projectFilter.value
     const res = await getTasks(params)
     tasks.value = res.data
+  } catch {
+    toast.error('Gagal memuat task. Coba refresh halaman.')
   } finally {
     loading.value = false
   }
@@ -48,9 +50,15 @@ watch(categoryFilter, () => fetchTasks())
 watch(projectFilter, () => fetchTasks())
 
 onMounted(async () => {
-  const [catRes, projRes] = await Promise.all([getCategories(), getProjects()])
-  categories.value = catRes.data
-  projects.value = projRes.data
+  try {
+    const [catRes, projRes] = await Promise.all([getCategories(), getProjects()])
+    categories.value = catRes.data
+    projects.value = projRes.data
+  } catch {
+    toast.error('Gagal memuat data filter. Coba refresh halaman.')
+    loading.value = false
+    return
+  }
   await fetchTasks()
 })
 

@@ -5,6 +5,7 @@ import AppLayout from '@/components/AppLayout.vue'
 import BadgeStatus from '@/components/BadgeStatus.vue'
 import ProjectFormModal from '@/components/ProjectFormModal.vue'
 import { getProjects } from '@/services/project.service'
+import { toast } from '@/plugins/toast.helper'
 import type { Project } from '@/types/project.types'
 
 const router = useRouter()
@@ -23,6 +24,8 @@ async function fetchProjects(): Promise<void> {
     if (statusFilter.value) params.status = statusFilter.value
     const res = await getProjects(params)
     projects.value = res.data
+  } catch {
+    toast.error('Gagal memuat project. Coba refresh halaman.')
   } finally {
     loading.value = false
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import axios from 'axios'
 import AppModal from './AppModal.vue'
 import { createTask, updateTask } from '@/services/task.service'
@@ -35,15 +35,22 @@ const projects = ref<Project[]>([])
 
 const todayStr = new Date().toISOString().split('T')[0]
 
-onMounted(async () => {
-  const [catRes, projRes] = await Promise.all([getCategories(), getProjects()])
-  categories.value = catRes.data
-  projects.value = projRes.data
-})
-
-watch(() => props.show, (visible) => {
+watch(() => props.show, async (visible) => {
   if (!visible) return
   fieldErrors.value = {}
+
+  if (!categories.value.length || !projects.value.length) {
+    try {
+      const [catRes, projRes] = await Promise.all([getCategories(), getProjects()])
+      categories.value = catRes.data
+      projects.value = projRes.data
+    } catch {
+      toast.error('Gagal memuat data form. Coba lagi.')
+      emit('update:show', false)
+      return
+    }
+  }
+
   if (props.mode === 'edit' && props.task) {
     title.value = props.task.title
     description.value = props.task.description
