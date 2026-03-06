@@ -52,6 +52,7 @@ function close(): void {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  margin: 16px;
 }
 .modal-header {
   display: flex;

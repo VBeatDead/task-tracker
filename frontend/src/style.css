@@ -121,3 +121,20 @@ select.form-input { cursor: pointer; }
   animation: shimmer 1.4s infinite;
   border-radius: 4px;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-wrapper { padding: 16px; }
+  .page-header { flex-wrap: wrap; gap: 12px; }
+  .table-wrapper { overflow-x: auto; }
+  .data-table { min-width: 560px; }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-input,
+  .filter-select { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .page-wrapper { padding: 12px; }
+  .stat-card { padding: 16px; }
+  .stat-card-value { font-size: 26px; }
+}
